@@ -80,6 +80,28 @@ button { font-family: inherit; cursor: pointer; border: none; border-radius: var
 .list-row { display: flex; gap: 8px; align-items: flex-start; }
 .list-row .list-input { flex: 1; }
 .empty { text-align: center; padding: 40px 20px; color: var(--text-3); font-size: 13px; }
+/* ---- Modal ---- */
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 1000; justify-content: center; align-items: center; }
+.modal-backdrop.open { display: flex; }
+.modal { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0; width: 90%; max-width: 640px; max-height: 90vh; overflow-y: auto; }
+.modal-header { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-header h2 { font-size: 16px; font-weight: 600; margin: 0; }
+.btn-close { background: none; border: none; font-size: 22px; color: var(--text-3); cursor: pointer; padding: 0 0 0 16px; line-height: 1; }
+.btn-close:hover { color: var(--text); }
+.modal-body { padding: 20px; }
+.modal-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+.modal-tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 8px 16px;
+  font-size: 13px; color: var(--text-3); cursor: pointer; font-family: inherit; border-radius: 0; }
+.modal-tab:hover { color: var(--text); }
+.modal-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.modal-panel { display: none; }
+.modal-panel.active { display: block; }
+.modal-panel .hint { color: var(--text-3); font-size: 12px; margin-bottom: 12px; line-height: 1.5; }
+.modal-panel .hint code { background: var(--panel-2); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+.modal-panel textarea { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; line-height: 1.5; }
+.modal-panel input[type="file"] { margin-top: 8px; }
 .overrides-toggle { background: none; border: none; color: var(--text-2); padding: 6px 0;
   font-size: 12px; text-align: left; cursor: pointer; }
 .overrides-toggle:hover { color: var(--accent); }

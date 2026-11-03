@@ -1,4 +1,70 @@
 /* =========================================================
+   STARTER — Generate AI prompt from user description
+   ========================================================= */
+function renderStarter() {
+  var panel = document.getElementById("panel-starter");
+  var placeholderText = "Describe your project here...\n\nExamples of what you can include:\n- Genre and tone (e.g. sci-fi thriller, cozy romance, horror)\n- Logline or story concept (1-2 sentences)\n- Main character description\n- Visual style preference (color palette, lighting, mood)\n- Target platform (YouTube Shorts, TikTok, Instagram Reel)\n- Any specific scenes or moments you want included\n- Continuity rules (things the AI must not change)";
+  panel.innerHTML =
+    '<div class="section">' +
+      '<h2>Describe Your Project</h2>' +
+      '<div class="hint">Write a brief description of your project. Be as detailed or as minimal as you like — the AI will fill in all the gaps.</div>' +
+      '<textarea id="starterDescription" rows="12" placeholder="' + esc(placeholderText) + '"></textarea>' +
+    '</div>' +
+    '<div class="section">' +
+      '<h2>Your AI Prompt</h2>' +
+      '<div class="info-box">Click <strong>&quot;Generate&quot;</strong> to create a ready-to-copy prompt. Then paste it into ChatGPT, Claude, or any AI chat. The AI will output a StoryBuilder JSON that you can <strong>Import</strong> back here.</div>' +
+      '<button id="btnGeneratePrompt" class="btn btn-primary">Generate Prompt</button>' +
+      '<div id="starterOutput" style="display:none; margin-top: 16px;">' +
+        '<div class="subtabs" id="starterSubtabs"></div>' +
+        '<div id="starterContent"></div>' +
+        '<div style="margin-top: 8px; display: flex; gap: 6px;">' +
+          '<button class="btn btn-sm" id="btnCopyPrompt">Copy Prompt</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="section">' +
+      '<h2>How It Works</h2>' +
+      '<div style="font-size: 13px; line-height: 1.7; color: var(--text-2);">' +
+        '<ol style="padding-left: 20px;">' +
+          '<li><strong>Describe</strong> your project in the text area above</li>' +
+          '<li><strong>Generate</strong> a prompt — this tool builds a detailed instruction for your AI chat</li>' +
+          '<li><strong>Copy</strong> the prompt and paste it into your AI chat (ChatGPT, Claude, Gemini, etc.)</li>' +
+          '<li>The AI will return a complete JSON structure matching the StoryBuilder format</li>' +
+          '<li><strong>Import</strong> that JSON back into StoryBuilder using the &quot;Import Project&quot; button</li>' +
+          '<li>Continue editing in the builder, then <strong>Export</strong> your prompts and artifacts</li>' +
+        '</ol>' +
+      '</div>' +
+    '</div>';
+
+  /* =========================================================
+     STARTER — attach event listeners (elements created just above)
+     ========================================================= */
+  var descEl = document.getElementById("starterDescription");
+  if (descEl) descEl.value = "";
+
+  var genBtn = document.getElementById("btnGeneratePrompt");
+  if (genBtn) {
+    genBtn.addEventListener("click", function() {
+      var desc = descEl ? descEl.value.trim() : "";
+      if (!desc) {
+        toast("Please describe your project first", true);
+        return;
+      }
+      _generateStarterPrompt(desc);
+    });
+  }
+
+  var copyBtn = document.getElementById("btnCopyPrompt");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", function() {
+      copyText(_starterPromptCache, "AI Prompt");
+      copyBtn.textContent = "Copied!";
+      setTimeout(function() { copyBtn.textContent = "Copy Prompt"; }, 2000);
+    });
+  }
+}
+
+/* =========================================================
    FIELD HELPERS
    ========================================================= */
 function field(label, bind, value, placeholder, type) {

@@ -8,7 +8,8 @@ var currentSubtab = "characters_text";
    ========================================================= */
 function renderCurrentTab() {
   var activeTab = document.querySelector("nav.tabs button.active").dataset.tab;
-  if (activeTab === "format") renderFormat();
+  if (activeTab === "starter") renderStarter();
+  else if (activeTab === "format") renderFormat();
   else if (activeTab === "story") renderStory();
   else if (activeTab === "cast") renderCast();
   else if (activeTab === "scenes") renderScenes();
@@ -244,10 +245,158 @@ document.getElementById("btnExportProject").addEventListener("click", function()
   download("project_state.json", JSON.stringify(state, null, 2));
 });
 
+/* =========================================================
+   STARTER — Prompt generation (functions live here; listeners
+   attached in renderStarter() since DOM elements are created there)
+   ========================================================= */
+var _starterPromptCache = "";
+
+function _generateStarterPrompt(desc) {
+  var promptText = 'You are a professional video storyboarding assistant. Convert the user project description below into a complete StoryBuilder project JSON.\n\n';
+  promptText += '=== INSTRUCTIONS ===\n\n';
+  promptText += 'Generate a valid JSON object that conforms to the StoryBuilder schema described below. Fill in ALL fields — do not leave any empty.\n\n';
+  promptText += 'IMPORTANT: Use the user description as the primary source. When details are missing, make creative but sensible choices that serve the story and maintain consistency.\n\n';
+  promptText += '=== STORYBUILDER JSON SCHEMA ===\n\n';
+  promptText += '{\n';
+  promptText += '  "meta": {\n';
+  promptText += '    "schemaVersion": "1.0",\n';
+  promptText += '    "projectId": "a_short_kebab_case_id_like_ep001_project_name",\n';
+  promptText += '    "title": "The Title of the Project"\n';
+  promptText += '  },\n';
+  promptText += '  "format": {\n';
+  promptText += '    "platform": "youtube_short | youtube_long | instagram_reel | tiktok",\n';
+  promptText += '    "aspectRatio": "9:16 | 16:9 | 1:1 | 4:5",\n';
+  promptText += '    "targetDurationSec": 45,\n';
+  promptText += '    "language": "en"\n';
+  promptText += '  },\n';
+  promptText += '  "brief": {\n';
+  promptText += '    "logline": "One sentence. The central dramatic question of the entire project.",\n';
+  promptText += '    "genreTone": ["genre1", "tone1", "tone2"],\n';
+  promptText += '    "visualStyle": {\n';
+  promptText += '      "palette": "color palette description",\n';
+  promptText += '      "lighting": "lighting style description",\n';
+  promptText += '      "lens": "lens description like 35mm anamorphic feel",\n';
+  promptText += '      "texture": "film/grain/texture description",\n';
+  promptText += '      "negative": "text, words, letters, typography, captions, subtitles, watermarks, signature, UI, HUD, overlays, garbled text, multiple subjects, clones, duplicates, split screen, character sheet, grid"\n';
+  promptText += '    },\n';
+  promptText += '    "imageNegative": "text, words, letters, typography, captions, subtitles, watermarks, signature, UI, HUD, overlays, garbled text, multiple subjects, clones, duplicates, split screen, character sheet, grid",\n';
+  promptText += '    "continuityRules": ["rule1 that must always be true", "rule2"]\n';
+  promptText += '  },\n';
+  promptText += '  "beats": [\n';
+  promptText += '    { "summary": "What happens in this beat (3-5 beats total)" },\n';
+  promptText += '    { "summary": "The story pivots or escalates" },\n';
+  promptText += '    { "summary": "Each beat becomes a scene or story moment" }\n';
+  promptText += '  ],\n';
+  promptText += '  "cast": [\n';
+  promptText += '    {\n';
+  promptText += '      "id": "c_character_name",\n';
+  promptText += '      "name": "Character Name",\n';
+  promptText += '      "age": "age descriptor like a late-30s woman",\n';
+  promptText += '      "face": "face and features description",\n';
+  promptText += '      "hair": "hair description",\n';
+  promptText += '      "eyes": "eye color/description",\n';
+  promptText += '      "wardrobe": "what they wear",\n';
+  promptText += '      "signature": "a unique detail that identifies them",\n';
+  promptText += '      "extra": "additional descriptors",\n';
+  promptText += '      "referenceImages": [],\n';
+  promptText += '      "doNotChange": ["fixed visual elements"],\n';
+  promptText += '      "voice": { "age": "late 30s", "timbre": "voice quality", "pace": "speaking pace", "accent": "accent" }\n';
+  promptText += '    }\n';
+  promptText += '  ],\n';
+  promptText += '  "scenes": [\n';
+  promptText += '    {\n';
+  promptText += '      "id": "sc01",\n';
+  promptText += '      "title": "Scene Title",\n';
+  promptText += '      "description": "What happens in this scene in a sentence or two.",\n';
+  promptText += '      "defaults": {\n';
+  promptText += '        "environment": "setting description",\n';
+  promptText += '        "key": "key light description",\n';
+  promptText += '        "fill": "fill light description",\n';
+  promptText += '        "contrast": "high | low | medium",\n';
+  promptText += '        "timeOfDay": "time of day",\n';
+  promptText += '        "palette": "color palette for this scene",\n';
+  promptText += '        "texture": "film texture",\n';
+  promptText += '        "mood": "mood/atmosphere",\n';
+  promptText += '        "ambience": "background sound description"\n';
+  promptText += '      },\n';
+  promptText += '      "shots": [\n';
+  promptText += '        {\n';
+  promptText += '          "id": "sc01_sh01",\n';
+  promptText += '          "size": "wide | medium | close-up | extreme close-up | etc.",\n';
+  promptText += '          "angle": "eye level | low angle | high angle | dutch angle | bird\'s eye | worm\'s eye | over the shoulder",\n';
+  promptText += '          "lens": "35mm | 50mm | 85mm | 24mm | etc.",\n';
+  promptText += '          "dof": "deep | medium | shallow | very shallow",\n';
+  promptText += '          "move": "static | slow push-in | dolly-in | tracking | handheld | etc.",\n';
+  promptText += '          "speed": "slowly | at medium speed | quickly",\n';
+  promptText += '          "castId": "c_character_name",\n';
+  promptText += '          "action": "what happens in this shot, described visually",\n';
+  promptText += '          "durationSec": 8,\n';
+  promptText += '          "dialogue": "exact spoken line or empty string",\n';
+  promptText += '          "sfx": "sound effect description",\n';
+  promptText += '          "negative": "shot-specific negative prompts or empty",\n';
+  promptText += '          "targetImage": "sc01_sh01_still.png",\n';
+  promptText += '          "mode": "frames_to_video",\n';
+  promptText += '          "overrides": {},\n';
+  promptText += '          "extraIngredients": []\n';
+  promptText += '        }\n';
+  promptText += '      ]\n';
+  promptText += '    }\n';
+  promptText += '  ],\n';
+  promptText += '  "audio": {\n';
+  promptText += '    "globalRules": {\n';
+  promptText += '      "roomTone": "base ambient sound description",\n';
+  promptText += '      "musicPolicy": "guidelines for music usage",\n';
+  promptText += '      "loudnessTarget": "-14 LUFS",\n';
+  promptText += '      "dialogueRule": "dialogue style guidelines"\n';
+  promptText += '    },\n';
+  promptText += '    "musicCues": [\n';
+  promptText += '      { "sceneId": "sc01", "prompt": "detailed music generation prompt" }\n';
+  promptText += '    ]\n';
+  promptText += '  }\n';
+  promptText += '}\n\n';
+  promptText += '=== USER PROJECT DESCRIPTION ===\n\n';
+  promptText += desc;
+  promptText += '\n\n=== OUTPUT FORMAT ===\n\n';
+  promptText += 'Return ONLY the JSON object. No markdown fences, no explanation text. Only a valid JSON object.\n';
+
+  _starterPromptCache = promptText;
+
+  var outputEl = document.getElementById("starterOutput");
+  outputEl.style.display = "block";
+
+  var subtabsEl = document.getElementById("starterSubtabs");
+  subtabsEl.innerHTML = '';
+
+  var contentEl = document.getElementById("starterContent");
+  contentEl.innerHTML = '<pre class="artifact-pre" id="promptOutput">' + esc(promptText) + '</pre>';
+
+  toast("Prompt generated — copy it to your AI chat");
+}
+
 document.getElementById("btnImportProject").addEventListener("click", function() {
-  document.getElementById("fileImport").click();
+  document.getElementById("modalBackdrop").classList.add("open");
+  _resetModal();
 });
 
+document.getElementById("modalClose").addEventListener("click", function() {
+  document.getElementById("modalBackdrop").classList.remove("open");
+});
+
+document.getElementById("modalBackdrop").addEventListener("click", function(e) {
+  if (e.target === this) this.classList.remove("open");
+});
+
+/* Modal tab switching */
+document.querySelectorAll(".modal-tab").forEach(function(tab) {
+  tab.addEventListener("click", function() {
+    document.querySelectorAll(".modal-tab").forEach(function(t) { t.classList.remove("active"); });
+    document.querySelectorAll(".modal-panel").forEach(function(p) { p.classList.remove("active"); });
+    tab.classList.add("active");
+    document.getElementById(tab.dataset.panel).classList.add("active");
+  });
+});
+
+/* Import from file (used by both button and modal) */
 document.getElementById("fileImport").addEventListener("change", function(e) {
   var file = e.target.files[0];
   if (!file) return;
@@ -259,13 +408,40 @@ document.getElementById("fileImport").addEventListener("change", function(e) {
       saveState();
       renderCurrentTab();
       toast("Project imported");
-    } catch(e) {
+      document.getElementById("modalBackdrop").classList.remove("open");
+    } catch(err) {
       toast("Invalid project file", true);
     }
   };
   reader.readAsText(file);
   e.target.value = "";
 });
+
+/* Import from textarea (inside modal) */
+document.getElementById("btnImportFromText").addEventListener("click", function() {
+  var input = document.getElementById("importJsonInput");
+  var text = input.value.trim();
+  if (!text) {
+    toast("Paste your JSON into the text area first", true);
+    return;
+  }
+  try {
+    var parsed = JSON.parse(text);
+    state = Object.assign(defaultState(), parsed);
+    saveState();
+    renderCurrentTab();
+    toast("Project imported");
+    input.value = "";
+    document.getElementById("modalBackdrop").classList.remove("open");
+  } catch(err) {
+    toast("Invalid JSON — check for syntax errors", true);
+  }
+});
+
+function _resetModal() {
+  document.getElementById("importJsonInput").value = "";
+  document.querySelector(".modal-tab.active").click();
+}
 
 /* =========================================================
    EXAMPLE PROJECT

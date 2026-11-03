@@ -16,11 +16,11 @@
   <button class="btn btn-sm" id="btnClear">Clear</button>
   <button class="btn btn-sm" id="btnExportProject">Download Project</button>
   <button class="btn btn-sm" id="btnImportProject">Import Project</button>
-  <input type="file" id="fileImport" accept=".json" style="display:none">
 </header>
 
 <nav class="tabs" id="tabs">
-  <button data-tab="format" class="active">1 · Format</button>
+  <button data-tab="starter" class="active">0 · Starter</button>
+  <button data-tab="format">1 · Format</button>
   <button data-tab="story">2 · Story</button>
   <button data-tab="cast">3 · Cast</button>
   <button data-tab="scenes">4 · Scenes &amp; Shots</button>
@@ -29,7 +29,8 @@
 </nav>
 
 <main id="main">
-  <section id="panel-format" class="panel active"></section>
+  <section id="panel-starter" class="panel active"></section>
+  <section id="panel-format" class="panel"></section>
   <section id="panel-story" class="panel"></section>
   <section id="panel-cast" class="panel"></section>
   <section id="panel-scenes" class="panel"></section>
@@ -44,6 +45,31 @@
 </footer>
 
 <div class="toast" id="toast"></div>
+
+<!-- Import modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Import Project</h2>
+      <button class="btn-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-panel="modalPaste">Paste JSON</button>
+        <button class="modal-tab" data-panel="modalFile">Upload File</button>
+      </div>
+      <div id="modalPaste" class="modal-panel active">
+        <p class="hint">Paste the StoryBuilder JSON you received from your AI chat below, then click <strong>Import</strong>.</p>
+        <textarea id="importJsonInput" rows="10" placeholder='{"meta": {"title": "..."}, ...}'></textarea>
+        <button class="btn btn-primary" id="btnImportFromText">Import</button>
+      </div>
+      <div id="modalFile" class="modal-panel">
+        <p class="hint">Select a <code>.json</code> project file saved from a previous session or generated elsewhere.</p>
+        <input type="file" id="fileImport" accept=".json">
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="js/constants.js"></script>
 <script src="js/state.js"></script>
