@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Video Story Builder</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <h1>AI Video <span>Story Builder</span></h1>
+  <div class="spacer"></div>
+  <span class="status" id="saveStatus">Saved</span>
+  <button class="btn btn-sm" id="btnLoadExample">Load Example</button>
+  <button class="btn btn-sm" id="btnClear">Clear</button>
+  <button class="btn btn-sm" id="btnExportProject">Download Project</button>
+  <button class="btn btn-sm" id="btnImportProject">Import Project</button>
+  <input type="file" id="fileImport" accept=".json" style="display:none">
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="format" class="active">1 · Format</button>
+  <button data-tab="story">2 · Story</button>
+  <button data-tab="cast">3 · Cast</button>
+  <button data-tab="scenes">4 · Scenes &amp; Shots</button>
+  <button data-tab="audio">5 · Audio</button>
+  <button data-tab="export">6 · Export</button>
+</nav>
+
+<main id="main">
+  <section id="panel-format" class="panel active"></section>
+  <section id="panel-story" class="panel"></section>
+  <section id="panel-cast" class="panel"></section>
+  <section id="panel-scenes" class="panel"></section>
+  <section id="panel-audio" class="panel"></section>
+  <section id="panel-export" class="panel"></section>
+</main>
+
+<footer>
+  <span id="footerStatus">Ready</span>
+  <div class="spacer"></div>
+  <span>Local only · No API calls · Autosaved</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/constants.js"></script>
+<script src="js/state.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/compilers.js"></script>
+<script src="js/validator.js"></script>
+<script src="js/renderers.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
