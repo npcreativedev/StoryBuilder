@@ -32,6 +32,7 @@ function defaultState() {
     beats: [],
     cast: [],
     scenes: [],
+    script: { scenes: [] },
     audio: { globalRules: { roomTone: "", musicPolicy: "", loudnessTarget: "-14 LUFS", dialogueRule: "" }, musicCues: [] }
   };
 }

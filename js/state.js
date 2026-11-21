@@ -11,6 +11,7 @@ function loadState() {
       ...def, ...parsed,
       brief: { ...def.brief, ...parsed.brief },
       format: { ...def.format, ...parsed.format },
+      script: { scenes: (parsed.script && parsed.script.scenes) || [] },
       audio: { ...def.audio, ...parsed.audio }
     };
   } catch(e) { return defaultState(); }

@@ -441,6 +441,89 @@ function renderShotCard(scene, shot, si, shi) {
   );
 }
 
+function renderScript() {
+  var panel = document.getElementById("panel-script");
+
+  if (!state.script) state.script = { scenes: [] };
+  if (!state.script.scenes) state.script.scenes = [];
+
+  if (state.script.scenes.length === 0) {
+    panel.innerHTML =
+      '<div class="section">' +
+        '<h2>Script</h2>' +
+        '<div class="hint">Write your screenplay here — action lines, character dialogue, and narrator voice-over. This is the source of truth for all speech in your project.</div>' +
+        '<div class="empty">No script scenes yet. Add a scene to start writing dialogue, narration, and action lines.</div>' +
+        '<button class="btn-add" data-action="add-script-scene">+ Add Script Scene</button>' +
+      '</div>';
+    return;
+  }
+
+  var castOptions = [{ value: "", label: "— select character —" }].concat(
+    state.cast.map(function(c) { return { value: c.id, label: c.name || c.id }; })
+  );
+
+  var scenesHtml = state.script.scenes.map(function(scene, si) {
+    var linesHtml = "";
+    if (!scene.lines || scene.lines.length === 0) {
+      linesHtml = '<div class="empty" style="padding:12px">No lines yet. Add an action, character dialogue, or narrator line below.</div>';
+    } else {
+      linesHtml = scene.lines.map(function(line, li) {
+        var baseBind = "script.scenes." + si + ".lines." + li;
+        var lineHtml = '<div style="display:flex; gap:8px; padding:10px; margin-bottom:6px; background:var(--panel-2, rgba(255,255,255,0.03)); border-left:3px solid ' +
+          (line.type === "character" ? "var(--accent)" : line.type === "narrator" ? "var(--success, #4ade80)" : "var(--text-3, #888)") +
+          '; border-radius:4px; align-items:flex-start;">';
+        lineHtml += '<span style="font-size:10px; font-weight:bold; color:var(--accent); min-width:80px; padding-top:6px; text-transform:uppercase;">' + line.type + '</span>';
+        lineHtml += '<div style="flex:1">';
+
+        if (line.type === "character") {
+          lineHtml += '<div class="grid-3">' +
+            selectField("Character", baseBind + ".characterId", line.characterId || "", castOptions) +
+            field("Name (if not in cast)", baseBind + ".characterName", line.characterName || "", "MARA") +
+            field("Parenthetical", baseBind + ".parenthetical", line.parenthetical || "", "Into mic, smooth") +
+          '</div>' +
+          '<div style="margin-top:6px">' +
+            textareaField("Dialogue", baseBind + ".dialogue", line.dialogue || "", "The actual spoken line...", 2) +
+          '</div>';
+        } else {
+          lineHtml += textareaField("", baseBind + ".text", line.text || "",
+            line.type === "narrator" ? "Narrator voice-over text..." : "Action description...", 2);
+        }
+
+        lineHtml += '</div>';
+        lineHtml += '<button class="btn-danger btn-sm" data-action="del-script-line" data-si="' + si + '" data-li="' + li + '" style="align-self:flex-start">✕</button>';
+        lineHtml += '</div>';
+        return lineHtml;
+      }).join("");
+    }
+
+    return (
+      '<div class="card">' +
+        '<div class="card-head">' +
+          '<span class="badge">scr' + pad2(si + 1) + '</span>' +
+          '<input class="title-input" data-bind="script.scenes.' + si + '.heading" value="' + esc(scene.heading) + '" placeholder="INT. K-OAK RADIO STATION - BOOTH - NIGHT">' +
+          '<button class="btn-danger" data-action="del-script-scene" data-index="' + si + '">Delete Scene</button>' +
+        '</div>' +
+        '<div class="card-body">' +
+          linesHtml +
+          '<div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">' +
+            '<button class="btn-add" data-action="add-script-line" data-si="' + si + '" data-type="action">+ Action</button>' +
+            '<button class="btn-add" data-action="add-script-line" data-si="' + si + '" data-type="character">+ Character Dialogue</button>' +
+            '<button class="btn-add" data-action="add-script-line" data-si="' + si + '" data-type="narrator">+ Narrator</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join("");
+
+  panel.innerHTML =
+    '<div class="section">' +
+      '<h2>Script</h2>' +
+      '<div class="hint">Write your screenplay here — action lines, character dialogue, and narrator voice-over. This is the source of truth for all speech in your project.</div>' +
+      scenesHtml +
+      '<button class="btn-add" data-action="add-script-scene">+ Add Script Scene</button>' +
+    '</div>';
+}
+
 function renderAudio() {
   var panel = document.getElementById("panel-audio");
 
@@ -520,15 +603,19 @@ function renderExport() {
     videoText += "PROMPT: " + vid.prompt_text + "\n\n";
   });
 
+  var scriptArray = compileScript();
+  var scriptText = compileScriptText();
   var artifacts = {
     characters_text: { label: "Step 1: Character Sheets", content: charactersText },
     images_text: { label: "Step 2: Scene Stills", content: imagesText },
     video_text: { label: "Step 3: Video", content: videoText },
+    script_text: { label: "Step 4: Script (text)", content: scriptText },
     images_json: { label: "images.json", content: JSON.stringify(imagesArray, null, 2) },
     video_json: { label: "video.json", content: JSON.stringify(videoArray, null, 2) },
     brief: { label: "brief.json", content: JSON.stringify(compileBrief(), null, 2) },
     cast: { label: "cast.json", content: JSON.stringify(compileCast(), null, 2) },
     audio: { label: "audio.json", content: JSON.stringify(compileAudio(), null, 2) },
+    script_json: { label: "script.json", content: JSON.stringify(scriptArray, null, 2) },
     shotlist: { label: "shotlist.md", content: compileShotlist() },
     bundle: { label: "project_bundle.json", content: JSON.stringify(compileBundle(), null, 2) }
   };
@@ -562,6 +649,12 @@ function renderExport() {
         '<div class="prompt-text"><strong style="color:var(--success)">Start Frame:</strong> ' + esc(vid.start_frame) + '<br><br>' + esc(vid.prompt_text) + '</div>' +
       '</div>';
     }).join("");
+  } else if (currentSubtab === "script_text") {
+    if (!scriptText || !scriptText.trim()) {
+      contentHtml = '<div class="empty">No script written yet. Go to the Script tab to add scenes and dialogue.</div>';
+    } else {
+      contentHtml = '<pre class="artifact-pre" style="white-space:pre-wrap; font-family:ui-monospace,monospace;">' + esc(scriptText) + '</pre>';
+    }
   } else {
     contentHtml = '<pre class="artifact-pre" id="artifactContent">' + esc(current.content) + '</pre>';
   }

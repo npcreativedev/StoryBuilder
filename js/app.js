@@ -13,6 +13,7 @@ function renderCurrentTab() {
   else if (activeTab === "story") renderStory();
   else if (activeTab === "cast") renderCast();
   else if (activeTab === "scenes") renderScenes();
+  else if (activeTab === "script") renderScript();
   else if (activeTab === "audio") renderAudio();
   else if (activeTab === "export") renderExport();
 }
@@ -173,6 +174,33 @@ document.getElementById("main").addEventListener("click", function(e) {
     state.audio.musicCues.splice(index, 1);
     saveState(); renderAudio();
   }
+  else if (action === "add-script-scene") {
+    if (!state.script) state.script = { scenes: [] };
+    state.script.scenes.push({ id: uid("scr"), heading: "", lines: [] });
+    saveState(); renderScript();
+  }
+  else if (action === "del-script-scene") {
+    state.script.scenes.splice(index, 1);
+    saveState(); renderScript();
+  }
+  else if (action === "add-script-line") {
+    if (!state.script) state.script = { scenes: [] };
+    var type = target.dataset.type || "action";
+    var line = { type: type, text: "" };
+    if (type === "character") {
+      line.characterId = "";
+      line.characterName = "";
+      line.parenthetical = "";
+      line.dialogue = "";
+    }
+    state.script.scenes[si].lines.push(line);
+    saveState(); renderScript();
+  }
+  else if (action === "del-script-line") {
+    var li = parseInt(target.dataset.li, 10);
+    state.script.scenes[si].lines.splice(li, 1);
+    saveState(); renderScript();
+  }
   else if (action === "copy-img-prompt" || action === "copy-video-prompt") {
     var shot2 = state.scenes[si].shots[shi];
     var scene2 = state.scenes[si];
@@ -196,6 +224,8 @@ document.getElementById("main").addEventListener("click", function(e) {
       brief: JSON.stringify(compileBrief(), null, 2),
       cast: JSON.stringify(compileCast(), null, 2),
       audio: JSON.stringify(compileAudio(), null, 2),
+      script_json: JSON.stringify(compileScript(), null, 2),
+      script_text: compileScriptText(),
       shotlist: compileShotlist(),
       bundle: JSON.stringify(compileBundle(), null, 2)
     };
@@ -208,6 +238,8 @@ document.getElementById("main").addEventListener("click", function(e) {
       brief: { name: "brief.json", body: JSON.stringify(compileBrief(), null, 2) },
       cast: { name: "cast.json", body: JSON.stringify(compileCast(), null, 2) },
       audio: { name: "audio.json", body: JSON.stringify(compileAudio(), null, 2) },
+      script_json: { name: "script.json", body: JSON.stringify(compileScript(), null, 2) },
+      script_text: { name: "script.txt", body: compileScriptText() },
       shotlist: { name: "shotlist.md", body: compileShotlist() },
       bundle: { name: "project_bundle.json", body: JSON.stringify(compileBundle(), null, 2) }
     };
@@ -352,8 +384,22 @@ function _generateStarterPrompt(desc) {
   promptText += '    "musicCues": [\n';
   promptText += '      { "sceneId": "sc01", "prompt": "detailed music generation prompt" }\n';
   promptText += '    ]\n';
+  promptText += '  },\n';
+  promptText += '  "script": {\n';
+  promptText += '    "scenes": [\n';
+  promptText += '      {\n';
+  promptText += '        "heading": "INT. LOCATION - TIME",\n';
+  promptText += '        "lines": [\n';
+  promptText += '          { "type": "action", "text": "Description of what happens visually." },\n';
+  promptText += '          { "type": "character", "characterId": "c_character_name", "characterName": "CHARACTER", "parenthetical": "delivery note", "dialogue": "The actual spoken line." },\n';
+  promptText += '          { "type": "narrator", "text": "Voice-over narration text." }\n';
+  promptText += '        ]\n';
+  promptText += '      }\n';
+  promptText += '    ]\n';
   promptText += '  }\n';
   promptText += '}\n\n';
+  promptText += '=== CRITICAL INSTRUCTION ===\n';
+  promptText += 'You MUST populate the "script" object with actual dialogue, narrator lines, and action descriptions. A project without speech or dialogue is incomplete. Use "character" type for spoken lines, "narrator" for voice-over, and "action" for visual descriptions. Do not leave dialogue empty if the scene implies speech.\n\n';
   promptText += '=== USER PROJECT DESCRIPTION ===\n\n';
   promptText += desc;
   promptText += '\n\n=== OUTPUT FORMAT ===\n\n';

@@ -323,12 +323,59 @@ function compileShotlist() {
   return md;
 }
 
+function compileScript() {
+  if (!state.script || !state.script.scenes) return { scenes: [] };
+  var scenes = state.script.scenes.map(function(scene, si) {
+    var lines = (scene.lines || []).map(function(line, li) {
+      var out = { line_id: "l" + pad2(li + 1), type: line.type || "action" };
+      if (line.type === "character") {
+        var char = line.characterId ? state.cast.find(function(c) { return c.id === line.characterId; }) : null;
+        out.character_id = line.characterId || null;
+        out.character_name = (char && char.name) || line.characterName || "";
+        out.parenthetical = line.parenthetical || "";
+        out.dialogue = line.dialogue || "";
+      } else {
+        out.text = line.text || "";
+      }
+      return out;
+    });
+    return {
+      scene_id: "scr" + pad2(si + 1),
+      heading: scene.heading || "",
+      lines: lines
+    };
+  });
+  return { scenes: scenes };
+}
+
+function compileScriptText() {
+  if (!state.script || !state.script.scenes) return "";
+  var text = "";
+  state.script.scenes.forEach(function(scene) {
+    if (scene.heading) text += "\n" + scene.heading + "\n\n";
+    (scene.lines || []).forEach(function(line) {
+      if (line.type === "action" || line.type === "narrator") {
+        if (line.text) text += line.text + "\n\n";
+      } else if (line.type === "character") {
+        var name = line.characterName || (line.characterId ? (state.cast.find(function(c) { return c.id === line.characterId; }) || {}).name || line.characterId : "");
+        if (name || line.dialogue) {
+          text += (name || "CHARACTER").toUpperCase() + "\n";
+          if (line.parenthetical) text += "(" + line.parenthetical + ")\n";
+          text += (line.dialogue || "") + "\n\n";
+        }
+      }
+    });
+  });
+  return text.trim();
+}
+
 function compileBundle() {
   return {
     schema_version: state.meta.schemaVersion,
     exported_at: new Date().toISOString(),
     brief: compileBrief(),
     cast: compileCast(),
+    script: compileScript(),
     images: compileImages(),
     video: compileVideo(),
     audio: compileAudio()
